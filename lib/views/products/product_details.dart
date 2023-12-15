@@ -1,9 +1,11 @@
 // ignore_for_file: must_be_immutable, unused_local_variable
 
+import 'package:estore/constants/constants.dart';
 import 'package:estore/hive/hivebox.dart';
 import 'package:estore/main.dart';
 import 'package:estore/views/products/product_update.dart';
 import 'package:estore/utils/size.dart';
+import 'package:estore/widgets/custom_tile.dart';
 import 'package:estore/widgets/widgets.dart';
 
 import 'package:flutter/material.dart';
@@ -85,12 +87,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     Map productDetails = await localdb.get('productDetails') ?? {};
     List personsNames = await localdb.get('personsNames') ?? [];
 
-    var date = DateTime.now().toString().substring(0, 19);
+    String date = customTime();
+    String dateOnly =
+        '${date.substring(0, 4)}-${date.substring(5, 7)}-${date.substring(8, 10)}';
 
     if (!personsNames.contains(nameController.text)) {
       personsNames.add(nameController.text);
       await localdb.put('personsNames', personsNames);
-      //await ref.child('personsNames').set(personsNames);
     } else {
       //
     }
@@ -100,17 +103,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       productHistory[widget.productname][date] = {
         'person': nameController.text,
         'quantity': quantityController.text,
+        'price': priceController.text,
       };
       await localdb.put('productHistory', productHistory);
-      //await ref.child('productHistory').set(productHistory);
     } else {
       productHistory[widget.productname][date] = {
         'person': nameController.text,
         'quantity': quantityController.text,
+        'price': priceController.text,
       };
 
       await localdb.put('productHistory', productHistory);
-      //await ref.child('productHistory').set(productHistory);
     }
 
     if (!personsHistory.containsKey(nameController.text)) {
@@ -118,23 +121,43 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       personsHistory[nameController.text][date] = {
         'product': widget.productname,
         'quantity': quantityController.text,
+        'price': priceController.text,
       };
       await localdb.put('personsHistory', personsHistory);
-      //await ref.child('personsHistory').set(personsHistory);
     } else {
       personsHistory[nameController.text][date] = {
         'product': widget.productname,
         'quantity': quantityController.text,
+        'price': priceController.text,
       };
       await localdb.put('personsHistory', personsHistory);
-      //await ref.child('personsHistory').set(personsHistory);
     }
 
     var quantity = productDetails[widget.productname]['quantity'];
     int qty = int.parse(quantity) - int.parse(quantityController.text);
     productDetails[widget.productname]['quantity'] = qty.toString();
     await localdb.put('productDetails', productDetails);
-    //await ref.child('productDetails').set(productDetails);
+
+    Map overallHistory = await hiveDb.getOverallHistory();
+
+    if (!overallHistory.containsKey(dateOnly)) {
+      overallHistory[dateOnly] = [];
+      overallHistory[dateOnly].add({
+        'name': nameController.text,
+        'product': widget.productname,
+        'price': priceController.text,
+        'quantity': quantityController.text,
+      });
+      await hiveDb.putOverallHistory(overallHistory);
+    } else {
+      overallHistory[dateOnly].add({
+        'name': nameController.text,
+        'product': widget.productname,
+        'price': priceController.text,
+        'quantity': quantityController.text,
+      });
+      await hiveDb.putOverallHistory(overallHistory);
+    }
 
     setState(() {
       widget.ifsell = false;
@@ -200,6 +223,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         body: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
+            mainAxisSize: MainAxisSize.max,
             children: [
               Expanded(
                   flex: 3,
@@ -251,6 +275,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           if (snapshot.hasData && snapshot.data.isNotEmpty) {
             List keys = [];
             Map snap = snapshot.data;
+            print(snap);
 
             // snap.forEach((key, value) {
             //   keys.contains(key) ? print(key) : keys.add(key);
@@ -270,7 +295,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               itemBuilder: (context, index) {
                 String key = keys[index];
                 key =
-                    '${key.substring(8, 10)}/${key.substring(5, 7)}/${key.substring(2, 4)}';
+                    '${key.substring(8, 10)}-${key.substring(5, 7)}-${key.substring(0, 4)}';
 
                 return Dismissible(
                     key: ValueKey(keys[index]),
@@ -303,38 +328,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     },
                     child: Column(
                       children: [
-                        SizedBox(
-                          height: screenSize(context,
-                              isHeight: true, percentage: 14),
-                          child: Card(
-                            elevation: 0,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Text(
-                                  ' $key',
-                                  style:
-                                      Theme.of(context).textTheme.displaySmall,
-                                ),
-                                const SizedBox(
-                                  height: 14,
-                                ),
-                                Align(
-                                  alignment: Alignment.bottomRight,
-                                  child: Text(
-                                    '${snap[keys[index]]['person']} ( ${snap[keys[index]]['quantity']} )',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displayMedium,
-                                    overflow: TextOverflow.clip,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const Divider(),
+                        customTile(context,
+                            date: ' $key',
+                            name: snap[keys[index]]['person'],
+                            price: snap[keys[index]]['price'].toString(),
+                            quantity: snap[keys[index]]['quantity']),
+                        // const Divider(),
                       ],
                     ));
               },

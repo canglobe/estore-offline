@@ -114,129 +114,133 @@ class _ProductScreenState extends State<ProductScreen> {
 
             products.sort();
             return Container(
+                padding: const EdgeInsets.all(5),
                 child: ListView.builder(
-              itemBuilder: (context, index) => Padding(
-                padding: const EdgeInsets.all(2),
-                child: GestureDetector(
-                  onTap: () {
-                    pageRoute(context, index, snap, products, false);
-                  },
-                  child: SizedBox(
-                    height:
-                        screenSize(context, isHeight: true, percentage: 16.5),
-                    child: Card(
-                      elevation: 0,
-                      child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            // Image Show--------------------------
-                            SizedBox(
-                              width: screenSize(context,
-                                  isHeight: false, percentage: 50),
-                              child: ClipRRect(
-                                  borderRadius: const BorderRadius.only(
-                                    topLeft: Radius.circular(5),
-                                  ),
-                                  child: snap[products[index]]['image'] != false
-                                      ? Image.file(
-                                          File(
-                                              '${imagePath + products[index]}.png'),
-                                          fit: BoxFit.fill,
-                                        )
-                                      : Container(
-                                          color: primaryColor,
-                                          child: Center(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(3),
-                                              child: Text(
-                                                products[index]
-                                                    .toString()
-                                                    .toUpperCase(),
+                  itemBuilder: (context, index) => Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: GestureDetector(
+                      onTap: () {
+                        pageRoute(context, index, snap, products, false);
+                      },
+                      child: SizedBox(
+                        height: screenSize(context,
+                            isHeight: true, percentage: 16.5),
+                        child: Card(
+                          elevation: 0,
+                          child: Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                // Image Show--------------------------
+                                SizedBox(
+                                  width: screenSize(context,
+                                      isHeight: false, percentage: 50),
+                                  child: ClipRRect(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(5),
+                                      ),
+                                      child: snap[products[index]]['image'] !=
+                                              false
+                                          ? Image.file(
+                                              File(
+                                                  '${imagePath + products[index]}.png'),
+                                              fit: BoxFit.fill,
+                                            )
+                                          : Container(
+                                              color: primaryColor,
+                                              child: Center(
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(3),
+                                                  child: Text(
+                                                    products[index]
+                                                        .toString()
+                                                        .toUpperCase(),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    style: const TextStyle(
+                                                        fontSize: 21,
+                                                        fontWeight:
+                                                            FontWeight.bold),
+                                                  ),
+                                                ),
+                                              ),
+                                            )),
+                                ),
+                                //---------------------------------------------------------
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const SizedBox(
+                                        height: 2,
+                                      ),
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                        children: [
+                                          const SizedBox(
+                                            width: 15,
+                                          ),
+                                          Column(
+                                            children: [
+                                              Text(
+                                                'Stock',
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .labelSmall,
+                                              ),
+                                              Text(
+                                                snap[products[index]]
+                                                        ['quantity']
+                                                    .toString(),
                                                 overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                    fontSize: 21,
+                                                style: TextStyle(
+                                                    fontSize: snap[products[
+                                                                        index]]
+                                                                    ['quantity']
+                                                                .toString()
+                                                                .length >
+                                                            4
+                                                        ? 18
+                                                        : 27,
                                                     fontWeight:
                                                         FontWeight.bold),
                                               ),
-                                            ),
+                                            ],
                                           ),
-                                        )),
-                            ),
-                            //---------------------------------------------------------
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const SizedBox(
-                                    height: 2,
-                                  ),
-                                  // ----------------------------------------------------Product Name showed here
-                                  // Text(
-                                  //   products[index].toString().toUpperCase(),
-                                  //   overflow: TextOverflow.ellipsis,
-                                  //   style: const TextStyle(
-                                  //       fontSize: 18,
-                                  //       fontWeight: FontWeight.bold),
-                                  // ),
-                                  // const Divider(),
-                                  // ----------------------------------------------------Product Quantity and Sell Button showed here
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceEvenly,
-                                    children: [
-                                      const SizedBox(
-                                        width: 30,
-                                      ),
-                                      Column(
-                                        children: [
-                                          Text(
-                                            'Stock',
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .labelSmall,
+                                          const SizedBox(
+                                            width: 5,
                                           ),
-                                          Text(
-                                            snap[products[index]]['quantity']
-                                                .toString(),
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontSize: 27,
-                                                fontWeight: FontWeight.bold),
-                                          ),
+                                          Row(
+                                            children: [
+                                              IconButton(
+                                                  onPressed: () {
+                                                    pageRoute(context, index,
+                                                        snap, products, true);
+                                                  },
+                                                  icon: const Icon(Icons
+                                                      .arrow_forward_ios_outlined)),
+                                            ],
+                                          )
                                         ],
                                       ),
                                       const SizedBox(
-                                        width: 15,
-                                      ),
-                                      Row(
-                                        children: [
-                                          IconButton(
-                                              onPressed: () {
-                                                pageRoute(context, index, snap,
-                                                    products, true);
-                                              },
-                                              icon: const Icon(Icons
-                                                  .arrow_forward_ios_outlined)),
-                                        ],
+                                        height: 2,
                                       )
                                     ],
                                   ),
-                                  const SizedBox(
-                                    height: 2,
-                                  )
-                                ],
-                              ),
-                            ),
-                            //---------------------
-                          ]),
+                                ),
+                                //---------------------
+                              ]),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              itemCount: products.length,
-            ));
+                  itemCount: products.length,
+                ));
           } else {
             return const Center();
           }
@@ -248,101 +252,6 @@ class _ProductScreenState extends State<ProductScreen> {
       ),
     );
   }
-
-  // haveImage(BuildContext context, Map<dynamic, dynamic> snap,
-  //     List<dynamic> products, int index) {
-  //   return [
-  //     //-------------------------------------
-  //     SizedBox(
-  //       width: screenSize(context, isHeight: false, percentage: 45),
-  //       child: ClipRRect(
-  //           borderRadius: const BorderRadius.only(
-  //             topLeft: Radius.circular(5),
-  //           ),
-  //           child: snap[products[index]]['image'] != false
-  //               ? Image.file(
-  //                   File('${imagePath + products[index]}.png'),
-  //                   fit: BoxFit.fill,
-  //                 )
-  //               : Container(
-  //                   color: primaryColor,
-  //                   child: Center(
-  //                     child: Padding(
-  //                       padding: const EdgeInsets.all(3),
-  //                       child: Text(
-  //                         products[index].toString().toUpperCase(),
-  //                         overflow: TextOverflow.ellipsis,
-  //                         style: const TextStyle(
-  //                             fontSize: 25, fontWeight: FontWeight.bold),
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 )),
-  //     ),
-  //     //---------------------------------------------------------
-  //     Expanded(
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.center,
-  //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //         children: [
-  //           const SizedBox(
-  //             height: 2,
-  //           ),
-  //           Flexible(
-  //             child: Text(
-  //               products[index].toString().toUpperCase(),
-  //               overflow: TextOverflow.ellipsis,
-  //               style: Theme.of(context).textTheme.headlineMedium,
-  //             ),
-  //           ),
-  //           const Divider(),
-  //           Flexible(
-  //             child: Row(
-  //               mainAxisAlignment: MainAxisAlignment.end,
-  //               children: [
-  //                 Center(
-  //                   child: Column(
-  //                     crossAxisAlignment: CrossAxisAlignment.center,
-  //                     children: [
-  //                       Text(
-  //                         'Stock',
-  //                         style: Theme.of(context).textTheme.labelSmall,
-  //                       ),
-  //                       Text(
-  //                         snap[products[index]]['quantity'].toString(),
-  //                         overflow: TextOverflow.ellipsis,
-  //                         style: TextStyle(
-  //                             fontSize: screenSize(context,
-  //                                 isHeight: true, percentage: 4),
-  //                             fontWeight: FontWeight.bold),
-  //                       ),
-  //                     ],
-  //                   ),
-  //                 ),
-  //                 const SizedBox(
-  //                   width: 15,
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     IconButton(
-  //                         onPressed: () {
-  //                           pageRoute(context, index, snap, products, true);
-  //                         },
-  //                         icon: const Icon(Icons.arrow_forward_ios_outlined)),
-  //                   ],
-  //                 )
-  //               ],
-  //             ),
-  //           ),
-  //           const SizedBox(
-  //             height: 2,
-  //           )
-  //         ],
-  //       ),
-  //     ),
-  //     //---------------------
-  //   ];
-  // }
 
   _fab() {
     return AnimatedSlide(

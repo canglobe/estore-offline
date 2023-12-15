@@ -45,5 +45,14 @@ class HiveDB {
     return data;
   }
 
+// ------------------------------------------------------ Get Overall History
+  getOverallHistory() async {
+    Map data = await localdb.get('overallHistory') ?? {};
+    return data;
+  }
+
+  putOverallHistory(data) async {
+    await localdb.put('overallHistory', data);
+  }
 // ------------------------------------------------------
 }

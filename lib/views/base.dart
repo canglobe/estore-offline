@@ -1,12 +1,10 @@
-import 'dart:io';
-import 'dart:async';
+import 'package:estore/views/sold/sold.dart';
 import 'package:flutter/material.dart';
 
 import 'package:estore/main.dart';
 import 'package:estore/constants/constants.dart';
 import 'package:estore/views/products/products.dart';
 import 'package:estore/views/customers/customers.dart';
-import 'package:estore/views/calculator/calculator_screen.dart';
 
 class BaseScreen extends StatefulWidget {
   const BaseScreen({super.key});
@@ -24,29 +22,9 @@ class _BaseScreenState extends State<BaseScreen> {
   List<Widget> pages = <Widget>[
     const CustomersScreen(),
     const ProductScreen(),
-    const Calculator(),
+    // const Calculator(),
+    const SoldScreen(),
   ];
-
-  Future checkUserConnection() async {
-    try {
-      final result = await InternetAddress.lookup('google.com');
-      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-        //
-      }
-    } on SocketException catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          closeIconColor: Colors.white,
-          showCloseIcon: true,
-          backgroundColor: Colors.red,
-          content: Text('I think your internet was not connected!'),
-          duration: Duration(seconds: 9),
-          dismissDirection: DismissDirection.up,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
 
   onDestinationSelected(index) {
     setState(() {
@@ -64,13 +42,23 @@ class _BaseScreenState extends State<BaseScreen> {
           'assets/brand/brand_logo.png',
         ),
         actions: [
-          // ---------------------------------------------------------------------------- Cloud Upload
+          // ---------------------------------------------------------------------------- Calculator
           // IconButton(
           //   onPressed: () async {
-          //     checkUserConnection();
-          //     setState(() {});
+          //     // await localdb.delete('overallHistory');
+          //     // var his = await localdb.get('overallHistory');
+          //     // print(his);
+
+          //     // String c = customTime();
+          //     // String da =
+          //     //     '${c.substring(0, 4)}-${c.substring(5, 7)}-${c.substring(8, 10)}';
+
+          //     // print(da);
+          //     await localdb.clear();
+          //     // Navigator.of(context)
+          //     //     .push(MaterialPageRoute(builder: (context) => Calculator()));
           //   },
-          //   icon: const Icon(Icons.cloud_upload_outlined),
+          //   icon: const Icon(Icons.calculate_outlined),
           //   tooltip: 'Cloud Upload',
           // ),
           // ---------------------------------------------------------------------------- Mode Change
@@ -98,7 +86,7 @@ class _BaseScreenState extends State<BaseScreen> {
           onDestinationSelected(index);
         },
         selectedIndex: currentPageIndex,
-        destinations: <Widget>[
+        destinations: const <Widget>[
           // ---------------------------------------------------------------------------- Customers
           NavigationDestination(
             selectedIcon: Icon(
@@ -106,7 +94,7 @@ class _BaseScreenState extends State<BaseScreen> {
               color: secondryColor,
               size: 23,
             ),
-            icon: const Icon(
+            icon: Icon(
               Icons.group_outlined,
               size: 23,
             ),
@@ -120,7 +108,7 @@ class _BaseScreenState extends State<BaseScreen> {
               color: secondryColor,
               size: 23,
             ),
-            icon: const Icon(
+            icon: Icon(
               Icons.category_outlined,
               size: 23,
             ),
@@ -130,15 +118,15 @@ class _BaseScreenState extends State<BaseScreen> {
           // ---------------------------------------------------------------------------- Calculator
           NavigationDestination(
             selectedIcon: Icon(
-              Icons.calculate_rounded,
+              Icons.sell_rounded,
               color: secondryColor,
               size: 23,
             ),
-            icon: const Icon(
-              Icons.calculate_outlined,
+            icon: Icon(
+              Icons.sell_outlined,
               size: 23,
             ),
-            label: 'Calculator',
+            label: 'Solded',
           ),
           // ---------------------------------------------------------------------------- End of NavigationBar
         ],

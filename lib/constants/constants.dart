@@ -42,13 +42,16 @@ TextStyle mystyle(double size,
 const primaryColor = Color.fromARGB(255, 0, 189, 213);
 const secondryColor = Color.fromARGB(255, 33, 150, 243);
 const bgColor = Color.fromARGB(255, 239, 250, 252);
+const scaffoldBgColor = Color.fromARGB(255, 239, 250, 252);
+const cardBgColor = Color.fromARGB(255, 188, 236, 242);
 const txtColor = Color.fromARGB(255, 33, 33, 33);
 const whitecolor = Colors.white;
+const primaryBgColor = Color.fromARGB(255, 93, 200, 214);
 
 // Text Colors Light Theme
-const textLightColor = Color.fromARGB(255, 33, 33, 33);
-const subTextColor = Color.fromARGB(255, 55, 55, 55);
-const miniTextColor = Color.fromARGB(255, 77, 77, 77);
+const textLightColor = Color.fromARGB(255, 55, 55, 55);
+const subTextColor = Color.fromARGB(255, 77, 77, 77);
+const miniTextColor = Color.fromARGB(255, 99, 99, 99);
 
 // Text Colors Dark Theme
 const textDarkColor = Color.fromARGB(255, 247, 245, 245);
@@ -60,3 +63,8 @@ const orangeColor = Color(0xfffa9f43);
 
 // Object for hive database
 HiveDB hiveDb = HiveDB();
+
+customTime() {
+  DateTime now = DateTime.now().add(const Duration(days: 1));
+  return '${now.year}-${now.month}-${now.day} ${now.hour > 12 ? now.hour - 12 : now.hour}:${now.minute}:${now.second}';
+}

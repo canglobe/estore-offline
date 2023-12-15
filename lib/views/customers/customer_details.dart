@@ -2,6 +2,7 @@ import 'package:estore/constants/constants.dart';
 import 'package:estore/main.dart';
 import 'package:estore/utils/size.dart';
 import 'package:estore/views/base.dart';
+import 'package:estore/widgets/custom_tile.dart';
 import 'package:estore/widgets/widgets.dart';
 
 import 'package:flutter/material.dart';
@@ -22,7 +23,9 @@ class CustomerDetailsScreen extends StatefulWidget {
 
 class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   final quantityController = TextEditingController();
+  final priceController = TextEditingController();
 
+  String selectedQuantity = '1';
   String err = '';
   List? products;
   String? selectedproduct;
@@ -31,6 +34,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   getData() async {
     Map personsHistory = await localdb.get('personsHistory') ?? {};
+    quantityController.text = selectedQuantity;
 
     return personsHistory;
   }
@@ -43,6 +47,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         productNames.add(key);
       },
     );
+    priceController.text =
+        await localdb.get('productDetails')[productNames[0]]['price'] ?? '';
     setState(() {
       products = productNames;
       selectedproduct = productNames.isNotEmpty ? productNames[0] : '';
@@ -52,19 +58,21 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   save() async {
     Map productHistory = await localdb.get('productHistory') ?? {};
     Map personsHistory = await localdb.get('personsHistory') ?? {};
-    var date = DateTime.now().toString().substring(0, 19);
+    String date = customTime();
 
     if (!productHistory.containsKey(selectedproduct)) {
       productHistory[selectedproduct] = {};
       productHistory[selectedproduct][date] = {
         'person': widget.person,
         'quantity': quantityController.text,
+        'price': priceController.text,
       };
       await localdb.put('productHistory', productHistory);
     } else {
       productHistory[selectedproduct][date] = {
         'person': widget.person,
         'quantity': quantityController.text,
+        'price': priceController.text,
       };
       await localdb.put('productHistory', productHistory);
     }
@@ -74,14 +82,39 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       personsHistory[widget.person][date] = {
         'product': selectedproduct,
         'quantity': quantityController.text,
+        'price': priceController.text,
       };
       await localdb.put('personsHistory', personsHistory);
     } else {
       personsHistory[widget.person][date] = {
         'product': selectedproduct,
         'quantity': quantityController.text,
+        'price': priceController.text,
       };
       await localdb.put('personsHistory', personsHistory);
+    }
+
+    String dateOnly =
+        '${date.substring(0, 4)}-${date.substring(5, 7)}-${date.substring(8, 10)}';
+    Map overallHistory = await hiveDb.getOverallHistory();
+
+    if (!overallHistory.containsKey(dateOnly)) {
+      overallHistory[dateOnly] = [];
+      overallHistory[dateOnly].add({
+        'name': widget.person,
+        'product': selectedproduct,
+        'price': priceController.text,
+        'quantity': quantityController.text,
+      });
+      await hiveDb.putOverallHistory(overallHistory);
+    } else {
+      overallHistory[dateOnly].add({
+        'name': widget.person,
+        'product': selectedproduct,
+        'price': priceController.text,
+        'quantity': quantityController.text,
+      });
+      await hiveDb.putOverallHistory(overallHistory);
     }
 
     Map productDetails = await localdb.get('productDetails') ?? {};
@@ -191,67 +224,81 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
 
   _sell(BuildContext context) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Divider(),
+        // Text(
+        //   'Sell ',
+        //   style: Theme.of(context).textTheme.headlineSmall,
+        // ),
+        // const Divider(),
         const SizedBox(
           height: 30,
         ),
+        SizedBox(
+          child: DropdownMenu(
+            width: screenSize(context, isHeight: false, percentage: 95),
+            initialSelection: products![0],
+            label: Text(
+              'Product Name',
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
+            dropdownMenuEntries:
+                products!.map<DropdownMenuEntry<String>>((value) {
+              return DropdownMenuEntry<String>(
+                value: value,
+                label: value,
+              );
+            }).toList(),
+            onSelected: (value) async {
+              priceController.text = await localdb
+                      .get('productDetails')[selectedproduct]['price'] ??
+                  '';
+              setState(() {
+                selectedproduct = value as String?;
+              });
+            },
+            textStyle: Theme.of(context).textTheme.displaySmall,
+          ),
+        ),
+        const SizedBox(
+          height: 14,
+        ),
         Padding(
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.all(7),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              const SizedBox(
-                height: 15,
-              ),
-              SizedBox(
-                child: DropdownMenu(
-                  width: screenSize(context, isHeight: false, percentage: 70),
-                  initialSelection: products![0],
-                  label: Text(
-                    'Product Name',
-                    style: Theme.of(context).textTheme.displaySmall,
+              Flexible(
+                flex: 1,
+                child: TextField(
+                  controller: priceController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Price',
+                    prefixIcon: Icon(Icons.currency_rupee_rounded),
                   ),
-                  dropdownMenuEntries:
-                      products!.map<DropdownMenuEntry<String>>((value) {
-                    return DropdownMenuEntry<String>(
-                      value: value,
-                      label: value,
-                    );
-                  }).toList(),
-                  onSelected: (value) {
-                    setState(() {
-                      selectedproduct = value as String?;
-                    });
-                  },
-                  textStyle: Theme.of(context).textTheme.displaySmall,
                 ),
               ),
               const SizedBox(
-                height: 15,
+                width: 5,
               ),
-              SizedBox(
+              Flexible(
+                flex: 1,
                 child: DropdownMenu(
-                  controller: quantityController,
-                  width: screenSize(context, isHeight: false, percentage: 20),
+                  width: screenSize(context, isHeight: false, percentage: 43),
                   initialSelection: numbers[0],
-                  label: Text(
-                    'Quantity',
-                    style: Theme.of(context).textTheme.displaySmall,
-                  ),
+                  label: const Text('Quantity'),
                   dropdownMenuEntries: numbers.map((e) {
                     return DropdownMenuEntry(value: e, label: e);
                   }).toList(),
                   onSelected: (value) {
                     setState(() {
-                      quantityController.text = value!;
+                      selectedQuantity = value!;
+                      quantityController.text = selectedQuantity;
                     });
                   },
                   textStyle: Theme.of(context).textTheme.displaySmall,
                 ),
-              ),
-              const SizedBox(
-                height: 15,
               ),
             ],
           ),
@@ -329,7 +376,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                 itemBuilder: (context, index) {
                   String key = keys[index];
                   key =
-                      '${key.substring(8, 10)}/${key.substring(5, 7)}/${key.substring(2, 4)}';
+                      '${key.substring(8, 10)}-${key.substring(5, 7)}-${key.substring(2, 4)}';
                   return Dismissible(
                     key: ValueKey(keys[index]),
                     confirmDismiss: (DismissDirection direction) async {
@@ -362,35 +409,12 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                     },
                     child: Column(
                       children: [
-                        SizedBox(
-                          height: screenSize(context,
-                              isHeight: true, percentage: 14),
-                          child: Card(
-                            elevation: 0,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                              children: [
-                                Text(
-                                  ' $key',
-                                  style:
-                                      Theme.of(context).textTheme.displaySmall,
-                                ),
-                                Align(
-                                  alignment: Alignment.bottomRight,
-                                  child: Text(
-                                    '${snap[keys[index]]['product']} ( ${snap[keys[index]]['quantity']} )',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .displayMedium,
-                                    overflow: TextOverflow.fade,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const Divider(),
+                        customTile(context,
+                            date: ' $key',
+                            name: snap[keys[index]]['product'],
+                            price: snap[keys[index]]['price'].toString(),
+                            quantity: snap[keys[index]]['quantity']),
+                        // const Divider(),
                       ],
                     ),
                   );
@@ -435,4 +459,158 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
           )
         : const Center();
   }
+
+  // _sell(context) {
+  //   return SingleChildScrollView(
+  //     child: Card(
+  //       elevation: 0,
+  //       child: Padding(
+  //         padding: const EdgeInsets.all(5),
+  //         child: Column(
+  //           children: [
+  //             const SizedBox(
+  //               height: 5,
+  //             ),
+  //             RawAutocomplete<String>(
+  //               optionsBuilder: (TextEditingValue textEditingValue) {
+  //                 return products!.where((String option) {
+  //                   return option.contains(textEditingValue.text.toLowerCase());
+  //                 });
+  //               },
+  //               fieldViewBuilder: (
+  //                 BuildContext context,
+  //                 TextEditingController textEditingController,
+  //                 FocusNode focusNode,
+  //                 VoidCallback onFieldSubmitted,
+  //               ) {
+  //                 return TextFormField(
+  //                   controller: textEditingController,
+  //                   decoration: InputDecoration(
+  //                     border: const OutlineInputBorder(),
+  //                     labelText: 'Customer Name',
+  //                     prefixIcon: Container(
+  //                       padding: const EdgeInsets.all(15),
+  //                       width: 18,
+  //                       child: const Icon(Icons.person),
+  //                     ),
+  //                   ),
+  //                   focusNode: focusNode,
+  //                   onTapOutside: (event) {
+  //                     FocusManager.instance.primaryFocus?.unfocus();
+  //                   },
+  //                   onFieldSubmitted: (String value) {
+  //                     onFieldSubmitted();
+  //                     nameController.text = textEditingController.text;
+  //                   },
+  //                   onChanged: (value) {
+  //                     nameController.text = value;
+  //                   },
+  //                 );
+  //               },
+  //               optionsViewBuilder: (
+  //                 BuildContext context,
+  //                 AutocompleteOnSelected<String> onSelected,
+  //                 Iterable<String> options,
+  //               ) {
+  //                 return Align(
+  //                   alignment: Alignment.topLeft,
+  //                   child: Material(
+  //                     elevation: 4.0,
+  //                     child: SizedBox(
+  //                       height: 200.0,
+  //                       child: ListView.builder(
+  //                         padding: const EdgeInsets.all(8.0),
+  //                         itemCount: options.length,
+  //                         itemBuilder: (BuildContext context, int index) {
+  //                           final String option = options.elementAt(index);
+  //                           return GestureDetector(
+  //                             onTap: () {
+  //                               onSelected(option);
+  //                               nameController.text = option;
+  //                             },
+  //                             child: ListTile(
+  //                               title: Text(option),
+  //                             ),
+  //                           );
+  //                         },
+  //                       ),
+  //                     ),
+  //                   ),
+  //                 );
+  //               },
+  //             ),
+  //             const SizedBox(
+  //               height: 23,
+  //             ),
+  //             Row(
+  //               children: [
+  //                 Flexible(
+  //                   flex: 1,
+  //                   child: TextField(
+  //                     controller: priceController,
+  //                     decoration: const InputDecoration(
+  //                       border: OutlineInputBorder(),
+  //                       labelText: 'Price',
+  //                       prefixIcon: Icon(Icons.currency_rupee_rounded),
+  //                     ),
+  //                   ),
+  //                 ),
+  //                 const SizedBox(
+  //                   width: 5,
+  //                 ),
+  //                 Flexible(
+  //                   flex: 1,
+  //                   child: DropdownMenu(
+  //                     width:
+  //                         screenSize(context, isHeight: false, percentage: 43),
+  //                     initialSelection: numbers[0],
+  //                     label: const Text('Quantity'),
+  //                     dropdownMenuEntries: numbers.map((e) {
+  //                       return DropdownMenuEntry(value: e, label: e);
+  //                     }).toList(),
+  //                     onSelected: (value) {
+  //                       setState(() {
+  //                         selectedQuantity = value!;
+  //                         quantityController.text = selectedQuantity;
+  //                       });
+  //                     },
+  //                     textStyle: Theme.of(context).textTheme.displaySmall,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //             const SizedBox(
+  //               height: 23,
+  //             ),
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //               children: [
+  //                 myButton(
+  //                     onPressed: () async {
+  //                       setState(() {
+  //                         widget.ifsell = false;
+  //                       });
+  //                     },
+  //                     child: myText(
+  //                       text: 'Back',
+  //                       size: 20.0,
+  //                     )),
+  //                 myButton(
+  //                     onPressed: () async {
+  //                       if (nameController.text.isNotEmpty) {
+  //                         save();
+  //                       } else {}
+  //                     },
+  //                     child: myText(
+  //                       text: 'Sell',
+  //                       size: 20.0,
+  //                     )),
+  //               ],
+  //             )
+  //           ],
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 }

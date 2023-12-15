@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:estore/main.dart';
 import 'package:estore/constants/constants.dart';
 import 'package:estore/views/customers/customer_details.dart';
+import 'package:flutter/rendering.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -54,13 +55,26 @@ class _CustomersScreenState extends State<CustomersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _subTitle(),
-          _searchBox(),
-          const Divider(),
-          _bodyContent(),
-        ],
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: (notification) {
+          final ScrollDirection direction = notification.direction;
+          setState(() {
+            if (direction == ScrollDirection.reverse) {
+              showFab = false;
+            } else if (direction == ScrollDirection.forward) {
+              showFab = true;
+            }
+          });
+          return true;
+        },
+        child: Column(
+          children: [
+            _subTitle(),
+            _searchBox(),
+            const Divider(),
+            _bodyContent(),
+          ],
+        ),
       ),
       floatingActionButton: _fab(),
     );
@@ -135,61 +149,56 @@ class _CustomersScreenState extends State<CustomersScreen> {
           List snap = snapshot.data;
           snap.sort();
 
-          return Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  itemBuilder: (context, index) {
-                    return Card(
-                      elevation: 0,
-                      shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(Radius.circular(9))),
-                      child: GestureDetector(
-                        onTap: () {
-                          var person = snap[index];
-                          Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => CustomerDetailsScreen(
-                                    person: person,
-                                    ifsell: false,
-                                  )));
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(2),
-                          child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: primaryColor,
-                                child: Text(
-                                  snap[index]
-                                      .toString()
-                                      .substring(0, 1)
-                                      .toUpperCase(),
-                                  style:
-                                      Theme.of(context).textTheme.headlineSmall,
-                                ),
-                              ),
-                              title: Text(
-                                snap[index].toString().toUpperCase(),
-                                style: Theme.of(context).textTheme.displaySmall,
-                              ),
-                              trailing: IconButton(
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                            builder: (context) =>
-                                                CustomerDetailsScreen(
-                                                  person: snap[index],
-                                                  ifsell: true,
-                                                )));
-                                  },
-                                  icon: const Icon(Icons.chevron_right))),
-                        ),
-                      ),
-                    );
-                  },
-                  itemCount: snap.length,
-                ),
-              ),
-            ],
+          return Container(
+            padding: const EdgeInsets.all(5),
+            child: ListView.builder(
+              itemBuilder: (context, index) {
+                return Card(
+                  elevation: 0,
+                  color: const Color.fromRGBO(250, 253, 254, 1),
+                  shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(9))),
+                  child: GestureDetector(
+                    onTap: () {
+                      var person = snap[index];
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => CustomerDetailsScreen(
+                                person: person,
+                                ifsell: false,
+                              )));
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(2),
+                      child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: primaryColor,
+                            child: Text(
+                              snap[index]
+                                  .toString()
+                                  .substring(0, 1)
+                                  .toUpperCase(),
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                          ),
+                          title: Text(
+                            snap[index].toString().toUpperCase(),
+                            style: Theme.of(context).textTheme.displaySmall,
+                          ),
+                          trailing: IconButton(
+                              onPressed: () {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                    builder: (context) => CustomerDetailsScreen(
+                                          person: snap[index],
+                                          ifsell: true,
+                                        )));
+                              },
+                              icon: const Icon(Icons.chevron_right))),
+                    ),
+                  ),
+                );
+              },
+              itemCount: snap.length,
+            ),
           );
         } else {
           return const Center();
@@ -198,12 +207,21 @@ class _CustomersScreenState extends State<CustomersScreen> {
     ));
   }
 
+  bool showFab = true;
   _fab() {
-    return FloatingActionButton.extended(
-      onPressed: () {
-        _showDialog();
-      },
-      label: const Icon(Icons.add),
+    return AnimatedSlide(
+      duration: const Duration(milliseconds: 200),
+      offset: showFab ? Offset.zero : const Offset(0, 2),
+      child: AnimatedOpacity(
+        duration: const Duration(milliseconds: 200),
+        opacity: showFab ? 1 : 0,
+        child: FloatingActionButton.extended(
+          onPressed: () {
+            _showDialog();
+          },
+          label: const Icon(Icons.add),
+        ),
+      ),
     );
   }
 

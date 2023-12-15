@@ -70,9 +70,6 @@ class _ProductUpdateState extends State<ProductUpdate> {
     await localdb.put('productDetails', productDetails);
     await localdb.put('productNames', productNames);
 
-    //await ref.child('productNames').set(productNames);
-    //await ref.child('productDetails').set(productDetails);
-
     setState(() {
       isLoading = false;
     });
@@ -145,7 +142,7 @@ class _ProductUpdateState extends State<ProductUpdate> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Edit',
+          'Update Product Details',
           style: Theme.of(context).textTheme.displaySmall,
         ),
         actions: [
@@ -400,7 +397,9 @@ class _ProductUpdateState extends State<ProductUpdate> {
           height: 45,
           width: 90,
           child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.pop(context);
+              },
               child: const Text(
                 'Delete',
                 style: TextStyle(color: Colors.redAccent, fontSize: 18),
