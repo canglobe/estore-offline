@@ -1,6 +1,20 @@
 import 'package:estore/main.dart';
 
+// Object for hive database
+HiveDB hiveDb = HiveDB();
+
 class HiveDB {
+  // Theme mode
+  Future<bool> getThemeMode() async {
+    bool mode = await localdb.get('darkMode') ?? false;
+    return mode;
+  }
+
+  putThemeMode(data) async {
+    await localdb.put('darkMode', data);
+  }
+
+  // Products
   getProductNames() async {
     List data = await localdb.get('productNames') ?? [];
 
@@ -29,23 +43,27 @@ class HiveDB {
     await localdb.put('productDetails', data);
   }
 
-// ----------------------------------------------------person
+  // customers
   getPersonsHistory() async {
-    Map data = await localdb.get('personsHistory') ?? {};
+    Map data = await localdb.get('customersHistory') ?? {};
     return data;
   }
 
   putPersonsHistory(data) async {
-    await localdb.put('personsHistory', data);
+    await localdb.put('customersHistory', data);
   }
 
   getPersonsNames() async {
-    List data = await localdb.get('personsNames') ?? [];
+    List data = await localdb.get('customers') ?? [];
 
     return data;
   }
 
-// ------------------------------------------------------ Get Overall History
+  putPersonsNames(data) async {
+    await localdb.put('customers', data);
+  }
+
+  // Overall history
   getOverallHistory() async {
     Map data = await localdb.get('overallHistory') ?? {};
     return data;
@@ -54,5 +72,5 @@ class HiveDB {
   putOverallHistory(data) async {
     await localdb.put('overallHistory', data);
   }
-// ------------------------------------------------------
+  // ------------------------------------------------------
 }

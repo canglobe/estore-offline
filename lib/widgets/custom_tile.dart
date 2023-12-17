@@ -1,6 +1,6 @@
-import 'package:estore/constants/constants.dart';
-import 'package:estore/utils/size.dart';
 import 'package:flutter/material.dart';
+import 'package:estore/utils/size.dart';
+import 'package:estore/constants/constants.dart';
 
 Widget customTile(
   context, {
@@ -13,11 +13,10 @@ Widget customTile(
     height: screenSize(context, isHeight: true, percentage: 14),
     width: screenSize(context, percentage: 97),
     child: Card(
-      // color: cardBgColor,
-      color: const Color.fromRGBO(250, 253, 254, 1),
       elevation: 0.3,
+      color: cardBgColor,
       child: Padding(
-        padding: const EdgeInsets.all(5),
+        padding: const EdgeInsets.only(left: 9, right: 9, top: 3, bottom: 3),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -28,18 +27,18 @@ Widget customTile(
                 Text(
                   date,
                   style: const TextStyle(
-                    // color: Colors.black45,
-                    color: Color.fromARGB(255, 0, 149, 173),
-                    fontSize: 12,
+                    // color: Color.fromARGB(255, 0, 149, 173),
+                    color: secondryColor,
+                    fontSize: 14,
                     fontWeight: FontWeight.w200,
                   ),
                 ),
                 Text(
-                  'Qty: $quantity',
+                  'Sold Count: $quantity',
                   style: const TextStyle(
-                    // color: Colors.black45,
-                    color: Color.fromARGB(255, 0, 149, 173),
-                    fontSize: 12,
+                    // color: Color.fromARGB(255, 0, 149, 173),
+                    color: secondryColor,
+                    fontSize: 14,
                     fontWeight: FontWeight.w200,
                   ),
                 ),
@@ -51,8 +50,7 @@ Widget customTile(
                 name,
                 style: const TextStyle(
                   color: textLightColor,
-                  // color: secondryColor,
-                  fontSize: 18,
+                  fontSize: 20,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -64,7 +62,7 @@ Widget customTile(
                   children: [
                     const Icon(
                       Icons.currency_rupee,
-                      size: 14,
+                      size: 16,
                       color: Colors.black54,
                     ),
                     Text(

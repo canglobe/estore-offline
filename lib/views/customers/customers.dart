@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-
-import 'package:estore/main.dart';
+import 'package:flutter/rendering.dart';
+import 'package:estore/hive/hivebox.dart';
 import 'package:estore/constants/constants.dart';
 import 'package:estore/views/customers/customer_details.dart';
-import 'package:flutter/rendering.dart';
 
 class CustomersScreen extends StatefulWidget {
   const CustomersScreen({super.key});
@@ -16,11 +15,11 @@ class _CustomersScreenState extends State<CustomersScreen> {
   final nameController = TextEditingController();
   final searchController = TextEditingController();
 
-  bool ifintialloading = true;
+  bool showFab = true;
   bool searchEnable = false;
 
   getData(value) async {
-    List personNames = await localdb.get('personsNames') ?? [];
+    List personNames = await hiveDb.getPersonsNames();
 
     if (value == '') {
       return personNames;
@@ -35,16 +34,16 @@ class _CustomersScreenState extends State<CustomersScreen> {
   }
 
   addNewCustomer() async {
-    List personNames = await localdb.get('personsNames') ?? [];
-    Map personsHistory = await localdb.get('personsHistory') ?? {};
+    List personNames = await hiveDb.getPersonsNames();
+    Map personsHistory = await hiveDb.getPersonsHistory();
     bool ifExist = !personNames.contains(nameController.text);
 
     if (nameController.text.isNotEmpty && ifExist) {
       personNames.add(nameController.text);
       // Map data = {nameController.text: {}};
 
-      await localdb.put('personsNames', personNames);
-      await localdb.put('personsHistory', personsHistory);
+      await hiveDb.putPersonsNames(personNames);
+      await hiveDb.putPersonsHistory(personsHistory);
       nameController.text = '';
       _popOut();
 
@@ -90,7 +89,7 @@ class _CustomersScreenState extends State<CustomersScreen> {
           children: [
             Text(
               'My Customers',
-              style: Theme.of(context).textTheme.displayMedium,
+              style: Theme.of(context).textTheme.displaySmall,
             ),
             IconButton(
                 onPressed: () {
@@ -115,26 +114,29 @@ class _CustomersScreenState extends State<CustomersScreen> {
     return Visibility(
       visible: searchEnable,
       child: Padding(
-        padding: const EdgeInsets.all(4.5),
-        child: TextField(
-          controller: searchController,
-          onChanged: (value) {
-            getData(value);
-            setState(() {});
-          },
-          cursorColor: Colors.grey,
-          decoration: InputDecoration(
-              filled: true,
-              border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none),
-              hintText: 'Search',
-              hintStyle: const TextStyle(color: Colors.grey, fontSize: 18),
-              prefixIcon: Container(
-                padding: const EdgeInsets.all(15),
-                width: 18,
-                child: const Icon(Icons.search_outlined),
-              )),
+        padding: const EdgeInsets.only(left: 9, right: 9),
+        child: SizedBox(
+          height: 59,
+          child: TextField(
+            controller: searchController,
+            onChanged: (value) {
+              getData(value);
+              setState(() {});
+            },
+            cursorColor: Colors.grey,
+            decoration: InputDecoration(
+                filled: true,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9),
+                    borderSide: BorderSide.none),
+                hintText: 'Search',
+                hintStyle: const TextStyle(color: Colors.grey, fontSize: 18),
+                prefixIcon: Container(
+                  padding: const EdgeInsets.only(left: 9),
+                  width: 14,
+                  child: const Icon(Icons.search_outlined),
+                )),
+          ),
         ),
       ),
     );
@@ -154,16 +156,16 @@ class _CustomersScreenState extends State<CustomersScreen> {
             child: ListView.builder(
               itemBuilder: (context, index) {
                 return Card(
-                  elevation: 0,
+                  elevation: 0.3,
                   color: const Color.fromRGBO(250, 253, 254, 1),
                   shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.all(Radius.circular(9))),
                   child: GestureDetector(
                     onTap: () {
-                      var person = snap[index];
+                      var customer = snap[index];
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => CustomerDetailsScreen(
-                                person: person,
+                                customer: customer,
                                 ifsell: false,
                               )));
                     },
@@ -182,17 +184,16 @@ class _CustomersScreenState extends State<CustomersScreen> {
                           ),
                           title: Text(
                             snap[index].toString().toUpperCase(),
-                            style: Theme.of(context).textTheme.displaySmall,
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
                           trailing: IconButton(
                               onPressed: () {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) => CustomerDetailsScreen(
-                                          person: snap[index],
-                                          ifsell: true,
-                                        )));
+                                pageRoute(snap, index);
                               },
-                              icon: const Icon(Icons.chevron_right))),
+                              icon: const Icon(
+                                Icons.chevron_right,
+                                color: textLightColor,
+                              ))),
                     ),
                   ),
                 );
@@ -207,7 +208,6 @@ class _CustomersScreenState extends State<CustomersScreen> {
     ));
   }
 
-  bool showFab = true;
   _fab() {
     return AnimatedSlide(
       duration: const Duration(milliseconds: 200),
@@ -256,5 +256,13 @@ class _CustomersScreenState extends State<CustomersScreen> {
 
   _popOut() {
     Navigator.pop(context);
+  }
+
+  pageRoute(snap, index) {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => CustomerDetailsScreen(
+              customer: snap[index],
+              ifsell: true,
+            )));
   }
 }

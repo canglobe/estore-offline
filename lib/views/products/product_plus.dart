@@ -60,7 +60,7 @@ class _NewProductState extends State<NewProduct> {
     if (!productDetails.containsKey(name)) {
       productDetails.putIfAbsent(
           name,
-          () => ProductsMod(
+          () => ProductsModel(
                   name: name,
                   price: price,
                   image: haveImage,
@@ -140,8 +140,9 @@ class _NewProductState extends State<NewProduct> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        elevation: 0.3,
         title: Text(
-          'Add Product',
+          'New Product',
           style: Theme.of(context).textTheme.headlineMedium,
         ),
       ),

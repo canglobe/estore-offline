@@ -1,4 +1,5 @@
 import 'package:estore/constants/constants.dart';
+import 'package:estore/hive/hivebox.dart';
 import 'package:estore/utils/size.dart';
 import 'package:estore/widgets/custom_tile.dart';
 import 'package:flutter/material.dart';
@@ -31,16 +32,20 @@ class _SoldScreenState extends State<SoldScreen> {
               padding: const EdgeInsets.all(5),
               child: ListView.builder(
                 itemBuilder: (context, index) {
+                  String key = keys[index];
+                  key =
+                      '${key.substring(8, 10)}-${key.substring(5, 7)}-${key.substring(0, 4)}';
                   return Column(
                     children: [
                       Stack(children: [
                         Text(
-                          keys[index].toString(),
-                          style: Theme.of(context).textTheme.headlineMedium,
+                          key.toString(),
+                          style: Theme.of(context).textTheme.displaySmall,
                         ),
                         Divider(
                           indent: screenSize(context,
                               isHeight: false, percentage: 30),
+                          color: miniTextColor,
                         ),
                       ]),
                       ListOfSold(
@@ -74,14 +79,17 @@ class ListOfSold extends StatefulWidget {
 class _ListOfSoldState extends State<ListOfSold> {
   @override
   Widget build(BuildContext context) {
-    return Column(
-        children: List.generate(
-      widget.innerkeys.length,
-      (index) => customTile(context,
-          date: '',
-          name: widget.innerkeys[index]['name'].toString(),
-          price: widget.innerkeys[index]['price'].toString(),
-          quantity: widget.innerkeys[index]['quantity'].toString()),
-    ));
+    return Padding(
+      padding: const EdgeInsets.only(left: 9, right: 9),
+      child: Column(
+          children: List.generate(
+        widget.innerkeys.length,
+        (index) => customTile(context,
+            date: widget.innerkeys[index]['product'].toString(),
+            name: widget.innerkeys[index]['name'].toString(),
+            price: widget.innerkeys[index]['price'].toString(),
+            quantity: widget.innerkeys[index]['quantity'].toString()),
+      )),
+    );
   }
 }

@@ -1,4 +1,3 @@
-import 'package:estore/hive/hivebox.dart';
 import 'package:flutter/material.dart';
 
 String imagePath =
@@ -23,11 +22,11 @@ List<String> prnames = <String>[
 
 List<String> cunames = <String>[
   '',
-  'person 1',
-  'person 2',
-  'person 3',
-  'person 4',
-  'person 5',
+  'customer 1',
+  'customer 2',
+  'customer 3',
+  'customer 4',
+  'customer 5',
 ];
 
 TextStyle mystyle(double size,
@@ -42,8 +41,8 @@ TextStyle mystyle(double size,
 const primaryColor = Color.fromARGB(255, 0, 189, 213);
 const secondryColor = Color.fromARGB(255, 33, 150, 243);
 const bgColor = Color.fromARGB(255, 239, 250, 252);
-const scaffoldBgColor = Color.fromARGB(255, 239, 250, 252);
-const cardBgColor = Color.fromARGB(255, 188, 236, 242);
+const scaffoldBgColor = Color.fromARGB(255, 243, 249, 250);
+const cardBgColor = Color.fromRGBO(250, 253, 254, 1);
 const txtColor = Color.fromARGB(255, 33, 33, 33);
 const whitecolor = Colors.white;
 const primaryBgColor = Color.fromARGB(255, 93, 200, 214);
@@ -52,6 +51,7 @@ const primaryBgColor = Color.fromARGB(255, 93, 200, 214);
 const textLightColor = Color.fromARGB(255, 55, 55, 55);
 const subTextColor = Color.fromARGB(255, 77, 77, 77);
 const miniTextColor = Color.fromARGB(255, 99, 99, 99);
+const primaryTextColor = Color.fromARGB(255, 0, 149, 173);
 
 // Text Colors Dark Theme
 const textDarkColor = Color.fromARGB(255, 247, 245, 245);
@@ -61,10 +61,7 @@ const greenColor = Color(0xff8ad979);
 const skyblueColor = Color(0xff5bcfc9);
 const orangeColor = Color(0xfffa9f43);
 
-// Object for hive database
-HiveDB hiveDb = HiveDB();
-
 customTime() {
-  DateTime now = DateTime.now().add(const Duration(days: 1));
+  DateTime now = DateTime.now().add(const Duration(days: -33));
   return '${now.year}-${now.month}-${now.day} ${now.hour > 12 ? now.hour - 12 : now.hour}:${now.minute}:${now.second}';
 }

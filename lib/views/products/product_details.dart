@@ -3,10 +3,11 @@
 import 'package:estore/constants/constants.dart';
 import 'package:estore/hive/hivebox.dart';
 import 'package:estore/main.dart';
+import 'package:estore/model/overall_history_model.dart';
 import 'package:estore/views/products/product_update.dart';
 import 'package:estore/utils/size.dart';
 import 'package:estore/widgets/custom_tile.dart';
-import 'package:estore/widgets/widgets.dart';
+import 'package:estore/widgets/my_widgets.dart';
 
 import 'package:flutter/material.dart';
 
@@ -37,40 +38,34 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   final quantityController = TextEditingController();
   final priceController = TextEditingController();
 
-  String selectedQuantity = '1';
   List? persons;
   List<String> names = [];
-
-  String? quan;
-  bool dropdownMode = false;
-  HiveDB hiveDb = HiveDB();
-
+  String selectedQuantity = '1';
   var numbers = ['1', '2', '3', '4', '5'];
 
   getData() async {
-    var productHistory = await localdb.get('productHistory') ?? {};
-
+    var productHistory = await hiveDb.getProductHistory();
     return productHistory[widget.productname];
   }
 
   getQuantity(productname) async {
-    Map productDetails = await localdb.get('productDetails') ?? {};
+    Map productDetails = await hiveDb.getProductDetails();
     String quantity = productDetails[productname]['quantity'];
     return quantity;
   }
 
   getNames() async {
     List<String> namess = [];
-    List personsNames = await localdb.get('personsNames') ?? [];
+    List customers = await hiveDb.getPersonsNames();
     quantityController.text = selectedQuantity;
     priceController.text =
         await localdb.get('productDetails')[widget.productname]['price'] ?? '';
 
-    for (var element in personsNames) {
+    for (var element in customers) {
       namess.add(element);
     }
     setState(() {
-      persons = personsNames;
+      persons = customers;
       names = namess;
     });
   }
@@ -82,80 +77,91 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   save() async {
-    Map productHistory = await localdb.get('productHistory') ?? {};
-    Map personsHistory = await localdb.get('personsHistory') ?? {};
-    Map productDetails = await localdb.get('productDetails') ?? {};
-    List personsNames = await localdb.get('personsNames') ?? [];
-
+    // Date
     String date = customTime();
     String dateOnly =
         '${date.substring(0, 4)}-${date.substring(5, 7)}-${date.substring(8, 10)}';
 
-    if (!personsNames.contains(nameController.text)) {
-      personsNames.add(nameController.text);
-      await localdb.put('personsNames', personsNames);
+    var customerName = nameController.text;
+    var productName = widget.productname;
+    var soldPrice = priceController.text;
+    var soldQuantity = quantityController.text;
+
+    // get hivedb data's
+    Map productHistory = await hiveDb.getProductHistory();
+    Map personsHistory = await hiveDb.getPersonsHistory();
+    Map productDetails = await hiveDb.getProductDetails();
+    List customers = await hiveDb.getPersonsNames();
+
+    if (!customers.contains(customerName)) {
+      customers.add(customerName);
+      await hiveDb.putPersonsNames(customers);
     } else {
-      //
+      // nothing do here
     }
 
-    if (!productHistory.containsKey(widget.productname)) {
-      productHistory[widget.productname] = {};
-      productHistory[widget.productname][date] = {
-        'person': nameController.text,
-        'quantity': quantityController.text,
-        'price': priceController.text,
+    if (!productHistory.containsKey(productName)) {
+      productHistory[productName] = {};
+      productHistory[productName][date] = {
+        'customer': customerName,
+        'quantity': soldQuantity,
+        'price': soldPrice,
       };
-      await localdb.put('productHistory', productHistory);
+      await hiveDb.putProductHistory(productHistory);
     } else {
-      productHistory[widget.productname][date] = {
-        'person': nameController.text,
-        'quantity': quantityController.text,
-        'price': priceController.text,
+      productHistory[productName][date] = {
+        'customer': customerName,
+        'quantity': soldQuantity,
+        'price': soldPrice,
       };
 
-      await localdb.put('productHistory', productHistory);
+      await hiveDb.putProductHistory(productHistory);
     }
 
-    if (!personsHistory.containsKey(nameController.text)) {
-      personsHistory[nameController.text] = {};
-      personsHistory[nameController.text][date] = {
+    if (!personsHistory.containsKey(customerName)) {
+      personsHistory[customerName] = {};
+      personsHistory[customerName][date] = {
         'product': widget.productname,
         'quantity': quantityController.text,
         'price': priceController.text,
       };
-      await localdb.put('personsHistory', personsHistory);
+      await hiveDb.putPersonsHistory(personsHistory);
     } else {
-      personsHistory[nameController.text][date] = {
-        'product': widget.productname,
-        'quantity': quantityController.text,
-        'price': priceController.text,
+      personsHistory[customerName][date] = {
+        'product': productName,
+        'quantity': soldQuantity,
+        'price': soldPrice,
       };
-      await localdb.put('personsHistory', personsHistory);
+      await hiveDb.putPersonsHistory(personsHistory);
     }
 
     var quantity = productDetails[widget.productname]['quantity'];
     int qty = int.parse(quantity) - int.parse(quantityController.text);
     productDetails[widget.productname]['quantity'] = qty.toString();
-    await localdb.put('productDetails', productDetails);
+    await hiveDb.putProductDetails(productDetails);
 
     Map overallHistory = await hiveDb.getOverallHistory();
 
     if (!overallHistory.containsKey(dateOnly)) {
       overallHistory[dateOnly] = [];
-      overallHistory[dateOnly].add({
-        'name': nameController.text,
-        'product': widget.productname,
-        'price': priceController.text,
-        'quantity': quantityController.text,
-      });
+      overallHistory[dateOnly].add(
+        OverallHistoryModel(
+                customer: nameController.text,
+                product: widget.productname,
+                price: priceController.text,
+                quantity: quantityController.text)
+            .toMap(),
+      );
       await hiveDb.putOverallHistory(overallHistory);
     } else {
-      overallHistory[dateOnly].add({
-        'name': nameController.text,
-        'product': widget.productname,
-        'price': priceController.text,
-        'quantity': quantityController.text,
-      });
+      overallHistory[dateOnly].add(
+        OverallHistoryModel(
+          customer: nameController.text,
+          product: widget.productname,
+          price: priceController.text,
+          quantity: quantityController.text,
+        ).toMap(),
+      );
       await hiveDb.putOverallHistory(overallHistory);
     }
 
@@ -165,12 +171,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   deleteHistory(index, keys, snap) async {
-    Map productHistory = await localdb.get('productHistory') ?? {};
-    var personsHistory = await localdb.get('personsHistory') ?? {};
+    Map productHistory = await hiveDb.getProductHistory();
+    var personsHistory = await hiveDb.getPersonsHistory();
     var productdetails = await hiveDb.getProductDetails();
 
     Map history = productHistory[widget.productname];
-    var person = history[keys[index]]['person'];
+    var customer = history[keys[index]]['customer'];
     var quant = history[keys[index]]['quantity'];
 
     var qty = productdetails[widget.productname]['quantity'];
@@ -178,13 +184,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     var newqty = int.parse(qty) + int.parse(quant);
     productdetails[widget.productname]['quantity'] = newqty.toString();
 
-    Map history1 = personsHistory[person];
+    Map history1 = personsHistory[customer];
     history1.remove(keys[index]);
     history.remove(keys[index]);
-    personsHistory[person] = history1;
+    personsHistory[customer] = history1;
     productHistory[widget.productname] = history;
-    await localdb.put('productHistory', productHistory);
-    await localdb.put('personsHistory', personsHistory);
+    await hiveDb.putPersonsHistory(productHistory);
+    await hiveDb.putPersonsHistory(personsHistory);
     await hiveDb.putProductDetails(productdetails);
     snap.remove(keys[index]);
   }
@@ -193,6 +199,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
+          elevation: 0.3,
           title: Text(
             widget.productname,
           ),
@@ -220,17 +227,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 : const Center(),
           ],
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Expanded(
-                  flex: 3,
-                  child:
-                      widget.ifsell != true ? _sellHistory() : _sell(context)),
-            ],
-          ),
+        body: Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            Expanded(
+                flex: 3,
+                child: widget.ifsell != true ? _sellHistory() : _sell(context)),
+          ],
         ),
         floatingActionButton: _fab(context));
   }
@@ -275,7 +278,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           if (snapshot.hasData && snapshot.data.isNotEmpty) {
             List keys = [];
             Map snap = snapshot.data;
-            print(snap);
 
             // snap.forEach((key, value) {
             //   keys.contains(key) ? print(key) : keys.add(key);
@@ -291,53 +293,58 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             }
             keys.sort();
             keys = keys.reversed.toList();
-            return ListView.builder(
-              itemBuilder: (context, index) {
-                String key = keys[index];
-                key =
-                    '${key.substring(8, 10)}-${key.substring(5, 7)}-${key.substring(0, 4)}';
+            return Padding(
+              padding: const EdgeInsets.only(left: 9, right: 9),
+              child: ListView.builder(
+                itemBuilder: (context, index) {
+                  String key = keys[index];
+                  key =
+                      '${key.substring(8, 10)}-${key.substring(5, 7)}-${key.substring(0, 4)}';
 
-                return Dismissible(
-                    key: ValueKey(keys[index]),
-                    confirmDismiss: (DismissDirection direction) async {
-                      return await showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text("Confirm"),
-                            content: const Text(
-                                "Are you sure you wish to delete this item?"),
-                            actions: <Widget>[
-                              TextButton(
+                  return Dismissible(
+                      key: ValueKey(keys[index]),
+                      confirmDismiss: (DismissDirection direction) async {
+                        return await showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text("Confirm"),
+                              content: const Text(
+                                  "Are you sure you wish to delete this item?"),
+                              actions: <Widget>[
+                                TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(context).pop(true),
+                                    child: const Text(
+                                      "DELETE",
+                                      style: TextStyle(color: Colors.redAccent),
+                                    )),
+                                TextButton(
                                   onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  child: const Text("DELETE")),
-                              TextButton(
-                                onPressed: () =>
-                                    Navigator.of(context).pop(false),
-                                child: const Text("CANCEL"),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    onDismissed: (direction) async {
-                      deleteHistory(index, keys, snap);
-                      setState(() {});
-                    },
-                    child: Column(
-                      children: [
-                        customTile(context,
-                            date: ' $key',
-                            name: snap[keys[index]]['person'],
-                            price: snap[keys[index]]['price'].toString(),
-                            quantity: snap[keys[index]]['quantity']),
-                        // const Divider(),
-                      ],
-                    ));
-              },
-              itemCount: keys.length,
+                                      Navigator.of(context).pop(false),
+                                  child: const Text("CANCEL"),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      onDismissed: (direction) async {
+                        deleteHistory(index, keys, snap);
+                        setState(() {});
+                      },
+                      child: Column(
+                        children: [
+                          customTile(context,
+                              date: ' $key',
+                              name: snap[keys[index]]['customer'],
+                              price: snap[keys[index]]['price'].toString(),
+                              quantity: snap[keys[index]]['quantity']),
+                        ],
+                      ));
+                },
+                itemCount: keys.length,
+              ),
             );
           } else {
             return const Center(
@@ -373,7 +380,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             },
             label: Text(
               'Sell',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
           )
         : const Center();
@@ -384,7 +391,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Card(
         elevation: 0,
         child: Padding(
-          padding: const EdgeInsets.all(5),
+          padding: const EdgeInsets.all(15),
           child: Column(
             children: [
               const SizedBox(
@@ -459,7 +466,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 },
               ),
               const SizedBox(
-                height: 23,
+                height: 14,
               ),
               Row(
                 children: [
@@ -472,6 +479,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         labelText: 'Price',
                         prefixIcon: Icon(Icons.currency_rupee_rounded),
                       ),
+                      style: Theme.of(context).textTheme.labelMedium,
                     ),
                   ),
                   const SizedBox(
@@ -487,6 +495,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       dropdownMenuEntries: numbers.map((e) {
                         return DropdownMenuEntry(value: e, label: e);
                       }).toList(),
+                      leadingIcon: const Icon(Icons.keyboard),
                       onSelected: (value) {
                         setState(() {
                           selectedQuantity = value!;
@@ -499,7 +508,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ],
               ),
               const SizedBox(
-                height: 23,
+                height: 100,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,

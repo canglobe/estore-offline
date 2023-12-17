@@ -1,19 +1,20 @@
 import 'package:estore/constants/constants.dart';
+import 'package:estore/hive/hivebox.dart';
 import 'package:estore/main.dart';
 import 'package:estore/utils/size.dart';
-import 'package:estore/views/base.dart';
+import 'package:estore/views/base_tabbar.dart';
 import 'package:estore/widgets/custom_tile.dart';
-import 'package:estore/widgets/widgets.dart';
+import 'package:estore/widgets/my_widgets.dart';
 
 import 'package:flutter/material.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
-  final String person;
+  final String customer;
   final bool ifsell;
 
   const CustomerDetailsScreen({
     super.key,
-    required this.person,
+    required this.customer,
     required this.ifsell,
   });
 
@@ -33,7 +34,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   bool? ifsell;
 
   getData() async {
-    Map personsHistory = await localdb.get('personsHistory') ?? {};
+    Map personsHistory = await hiveDb.getPersonsHistory();
     quantityController.text = selectedQuantity;
 
     return personsHistory;
@@ -56,42 +57,42 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   }
 
   save() async {
-    Map productHistory = await localdb.get('productHistory') ?? {};
-    Map personsHistory = await localdb.get('personsHistory') ?? {};
+    Map productHistory = await hiveDb.getProductHistory();
+    Map personsHistory = await hiveDb.getPersonsHistory();
     String date = customTime();
 
     if (!productHistory.containsKey(selectedproduct)) {
       productHistory[selectedproduct] = {};
       productHistory[selectedproduct][date] = {
-        'person': widget.person,
+        'customer': widget.customer,
         'quantity': quantityController.text,
         'price': priceController.text,
       };
-      await localdb.put('productHistory', productHistory);
+      await hiveDb.putPersonsHistory(productHistory);
     } else {
       productHistory[selectedproduct][date] = {
-        'person': widget.person,
+        'customer': widget.customer,
         'quantity': quantityController.text,
         'price': priceController.text,
       };
-      await localdb.put('productHistory', productHistory);
+      await hiveDb.putPersonsHistory(productHistory);
     }
 
-    if (!personsHistory.containsKey(widget.person)) {
-      personsHistory[widget.person] = {};
-      personsHistory[widget.person][date] = {
+    if (!personsHistory.containsKey(widget.customer)) {
+      personsHistory[widget.customer] = {};
+      personsHistory[widget.customer][date] = {
         'product': selectedproduct,
         'quantity': quantityController.text,
         'price': priceController.text,
       };
-      await localdb.put('personsHistory', personsHistory);
+      await hiveDb.putPersonsHistory(personsHistory);
     } else {
-      personsHistory[widget.person][date] = {
+      personsHistory[widget.customer][date] = {
         'product': selectedproduct,
         'quantity': quantityController.text,
         'price': priceController.text,
       };
-      await localdb.put('personsHistory', personsHistory);
+      await hiveDb.putPersonsHistory(personsHistory);
     }
 
     String dateOnly =
@@ -101,7 +102,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     if (!overallHistory.containsKey(dateOnly)) {
       overallHistory[dateOnly] = [];
       overallHistory[dateOnly].add({
-        'name': widget.person,
+        'name': widget.customer,
         'product': selectedproduct,
         'price': priceController.text,
         'quantity': quantityController.text,
@@ -109,7 +110,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       await hiveDb.putOverallHistory(overallHistory);
     } else {
       overallHistory[dateOnly].add({
-        'name': widget.person,
+        'name': widget.customer,
         'product': selectedproduct,
         'price': priceController.text,
         'quantity': quantityController.text,
@@ -117,19 +118,19 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       await hiveDb.putOverallHistory(overallHistory);
     }
 
-    Map productDetails = await localdb.get('productDetails') ?? {};
+    Map productDetails = await hiveDb.getProductDetails();
     var quantity = productDetails[selectedproduct]['quantity'];
     int qty = int.parse(quantity) - int.parse(quantityController.text);
     productDetails[selectedproduct]['quantity'] = qty.toString();
-    await localdb.put('productDetails', productDetails);
+    await hiveDb.putProductDetails(productDetails);
   }
 
   deleteHistory(index, keys, snap) async {
     Map productdetails = await hiveDb.getProductDetails();
-    Map productHistory = await localdb.get('productHistory') ?? {};
+    Map productHistory = await hiveDb.getProductHistory();
 
-    Map personsHistory = await localdb.get('personsHistory') ?? {};
-    Map history = personsHistory[widget.person];
+    Map personsHistory = await hiveDb.getPersonsHistory();
+    Map history = personsHistory[widget.customer];
     var product = history[keys[index]]['product'];
 
     bool avl = productdetails.containsKey(product);
@@ -147,10 +148,10 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     history.remove(keys[index]);
 
     productHistory[product] = historypr;
-    personsHistory[widget.person] = history;
+    personsHistory[widget.customer] = history;
 
-    await localdb.put('productHistory', productHistory);
-    await localdb.put('personsHistory', personsHistory);
+    await hiveDb.putPersonsHistory(productHistory);
+    await hiveDb.putPersonsHistory(personsHistory);
     avl ? await hiveDb.putProductDetails(productdetails) : '';
     snap.remove(keys[index]);
   }
@@ -166,7 +167,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.person),
+        elevation: 0.3,
+        title: Text(widget.customer),
         actions: [
           IconButton(
               onPressed: () async {
@@ -180,15 +182,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       actions: <Widget>[
                         TextButton(
                             onPressed: () async {
-                              List personsNames =
-                                  await localdb.get('personsNames') ?? [];
+                              List customers = await hiveDb.getPersonsNames();
 
-                              personsNames.remove(widget.person);
+                              customers.remove(widget.customer);
 
-                              await localdb.put('personsNames', personsNames);
+                              await hiveDb.putPersonsNames(customers);
 
-                              Navigator.pushNamedAndRemoveUntil(
-                                  context, '/', (c) => false);
+                              navigationToSplash();
                             },
                             child: const Text(
                               "DELETE",
@@ -223,121 +223,124 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
   }
 
   _sell(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Text(
-        //   'Sell ',
-        //   style: Theme.of(context).textTheme.headlineSmall,
-        // ),
-        // const Divider(),
-        const SizedBox(
-          height: 30,
-        ),
-        SizedBox(
-          child: DropdownMenu(
-            width: screenSize(context, isHeight: false, percentage: 95),
-            initialSelection: products![0],
-            label: Text(
-              'Product Name',
-              style: Theme.of(context).textTheme.displaySmall,
-            ),
-            dropdownMenuEntries:
-                products!.map<DropdownMenuEntry<String>>((value) {
-              return DropdownMenuEntry<String>(
-                value: value,
-                label: value,
-              );
-            }).toList(),
-            onSelected: (value) async {
-              priceController.text = await localdb
-                      .get('productDetails')[selectedproduct]['price'] ??
-                  '';
-              setState(() {
-                selectedproduct = value as String?;
-              });
-            },
-            textStyle: Theme.of(context).textTheme.displaySmall,
-          ),
-        ),
-        const SizedBox(
-          height: 14,
-        ),
-        Padding(
-          padding: const EdgeInsets.all(7),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 0,
+        child: Padding(
+          padding: const EdgeInsets.all(15),
+          child: Column(
             children: [
-              Flexible(
-                flex: 1,
-                child: TextField(
-                  controller: priceController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Price',
-                    prefixIcon: Icon(Icons.currency_rupee_rounded),
-                  ),
-                ),
-              ),
               const SizedBox(
-                width: 5,
+                height: 5,
               ),
-              Flexible(
-                flex: 1,
+              SizedBox(
                 child: DropdownMenu(
-                  width: screenSize(context, isHeight: false, percentage: 43),
-                  initialSelection: numbers[0],
-                  label: const Text('Quantity'),
-                  dropdownMenuEntries: numbers.map((e) {
-                    return DropdownMenuEntry(value: e, label: e);
+                  width: screenSize(context, isHeight: false, percentage: 87),
+                  initialSelection: products![0],
+                  leadingIcon: const Icon(Icons.category),
+                  label: Text(
+                    'Product Name',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
+                  dropdownMenuEntries:
+                      products!.map<DropdownMenuEntry<String>>((value) {
+                    return DropdownMenuEntry<String>(
+                      value: value,
+                      label: value,
+                    );
                   }).toList(),
-                  onSelected: (value) {
+                  onSelected: (value) async {
+                    priceController.text = await localdb
+                            .get('productDetails')[selectedproduct]['price'] ??
+                        '';
                     setState(() {
-                      selectedQuantity = value!;
-                      quantityController.text = selectedQuantity;
+                      selectedproduct = value as String?;
                     });
                   },
                   textStyle: Theme.of(context).textTheme.displaySmall,
                 ),
               ),
+              const SizedBox(
+                height: 14,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(7),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Flexible(
+                      flex: 1,
+                      child: TextField(
+                        controller: priceController,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Price',
+                          prefixIcon: Icon(Icons.currency_rupee_rounded),
+                        ),
+                        style: Theme.of(context).textTheme.labelMedium,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: DropdownMenu(
+                        width: screenSize(context,
+                            isHeight: false, percentage: 43),
+                        initialSelection: numbers[0],
+                        label: const Text('Quantity'),
+                        dropdownMenuEntries: numbers.map((e) {
+                          return DropdownMenuEntry(value: e, label: e);
+                        }).toList(),
+                        onSelected: (value) {
+                          setState(() {
+                            selectedQuantity = value!;
+                            quantityController.text = selectedQuantity;
+                          });
+                        },
+                        leadingIcon: const Icon(Icons.keyboard),
+                        textStyle: Theme.of(context).textTheme.displaySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(
+                height: 100,
+              ),
+
+              // Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  myButton(
+                      onPressed: () {
+                        setState(() {
+                          ifsell = false;
+                        });
+                      },
+                      child: Text(
+                        'Back',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      )),
+                  myButton(
+                      onPressed: () {
+                        save();
+                        setState(() {
+                          ifsell = false;
+                        });
+                      },
+                      child: Text(
+                        'Sell',
+                        style: Theme.of(context).textTheme.labelLarge,
+                      )),
+                ],
+              ),
             ],
           ),
         ),
-        const SizedBox(
-          height: 45,
-        ),
-
-        // Buttons
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            myButton(
-                onPressed: () {
-                  setState(() {
-                    ifsell = false;
-                  });
-                },
-                child: Text(
-                  'Back',
-                  style: Theme.of(context).textTheme.labelLarge,
-                )),
-            myButton(
-                onPressed: () {
-                  save();
-                  setState(() {
-                    ifsell = false;
-                  });
-                },
-                child: Text(
-                  'Sell',
-                  style: Theme.of(context).textTheme.labelLarge,
-                )),
-          ],
-        ),
-        const SizedBox(
-          height: 45,
-        ),
-      ],
+      ),
     );
   }
 
@@ -346,7 +349,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
       child: TextButton(
           onPressed: () {
             Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const BaseScreen()));
+                MaterialPageRoute(builder: (context) => const BaseTapBar()));
           },
           child: const Text('First add any one of product')),
     );
@@ -359,9 +362,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
         builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
           if (snapshot.hasData &&
               snapshot.data.isNotEmpty &&
-              snapshot.data[widget.person] != null) {
+              snapshot.data[widget.customer] != null) {
             List keys = [];
-            Map snap = snapshot.data[widget.person];
+            Map snap = snapshot.data[widget.customer];
 
             for (var x in snap.keys) {
               keys.add(x);
@@ -371,7 +374,7 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             keys = keys.reversed.toList();
 
             return Padding(
-              padding: const EdgeInsets.all(5),
+              padding: const EdgeInsets.only(left: 9, right: 9),
               child: ListView.builder(
                 itemBuilder: (context, index) {
                   String key = keys[index];
@@ -454,163 +457,13 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
             },
             label: Text(
               'Sell',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
           )
         : const Center();
   }
 
-  // _sell(context) {
-  //   return SingleChildScrollView(
-  //     child: Card(
-  //       elevation: 0,
-  //       child: Padding(
-  //         padding: const EdgeInsets.all(5),
-  //         child: Column(
-  //           children: [
-  //             const SizedBox(
-  //               height: 5,
-  //             ),
-  //             RawAutocomplete<String>(
-  //               optionsBuilder: (TextEditingValue textEditingValue) {
-  //                 return products!.where((String option) {
-  //                   return option.contains(textEditingValue.text.toLowerCase());
-  //                 });
-  //               },
-  //               fieldViewBuilder: (
-  //                 BuildContext context,
-  //                 TextEditingController textEditingController,
-  //                 FocusNode focusNode,
-  //                 VoidCallback onFieldSubmitted,
-  //               ) {
-  //                 return TextFormField(
-  //                   controller: textEditingController,
-  //                   decoration: InputDecoration(
-  //                     border: const OutlineInputBorder(),
-  //                     labelText: 'Customer Name',
-  //                     prefixIcon: Container(
-  //                       padding: const EdgeInsets.all(15),
-  //                       width: 18,
-  //                       child: const Icon(Icons.person),
-  //                     ),
-  //                   ),
-  //                   focusNode: focusNode,
-  //                   onTapOutside: (event) {
-  //                     FocusManager.instance.primaryFocus?.unfocus();
-  //                   },
-  //                   onFieldSubmitted: (String value) {
-  //                     onFieldSubmitted();
-  //                     nameController.text = textEditingController.text;
-  //                   },
-  //                   onChanged: (value) {
-  //                     nameController.text = value;
-  //                   },
-  //                 );
-  //               },
-  //               optionsViewBuilder: (
-  //                 BuildContext context,
-  //                 AutocompleteOnSelected<String> onSelected,
-  //                 Iterable<String> options,
-  //               ) {
-  //                 return Align(
-  //                   alignment: Alignment.topLeft,
-  //                   child: Material(
-  //                     elevation: 4.0,
-  //                     child: SizedBox(
-  //                       height: 200.0,
-  //                       child: ListView.builder(
-  //                         padding: const EdgeInsets.all(8.0),
-  //                         itemCount: options.length,
-  //                         itemBuilder: (BuildContext context, int index) {
-  //                           final String option = options.elementAt(index);
-  //                           return GestureDetector(
-  //                             onTap: () {
-  //                               onSelected(option);
-  //                               nameController.text = option;
-  //                             },
-  //                             child: ListTile(
-  //                               title: Text(option),
-  //                             ),
-  //                           );
-  //                         },
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 );
-  //               },
-  //             ),
-  //             const SizedBox(
-  //               height: 23,
-  //             ),
-  //             Row(
-  //               children: [
-  //                 Flexible(
-  //                   flex: 1,
-  //                   child: TextField(
-  //                     controller: priceController,
-  //                     decoration: const InputDecoration(
-  //                       border: OutlineInputBorder(),
-  //                       labelText: 'Price',
-  //                       prefixIcon: Icon(Icons.currency_rupee_rounded),
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 const SizedBox(
-  //                   width: 5,
-  //                 ),
-  //                 Flexible(
-  //                   flex: 1,
-  //                   child: DropdownMenu(
-  //                     width:
-  //                         screenSize(context, isHeight: false, percentage: 43),
-  //                     initialSelection: numbers[0],
-  //                     label: const Text('Quantity'),
-  //                     dropdownMenuEntries: numbers.map((e) {
-  //                       return DropdownMenuEntry(value: e, label: e);
-  //                     }).toList(),
-  //                     onSelected: (value) {
-  //                       setState(() {
-  //                         selectedQuantity = value!;
-  //                         quantityController.text = selectedQuantity;
-  //                       });
-  //                     },
-  //                     textStyle: Theme.of(context).textTheme.displaySmall,
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //             const SizedBox(
-  //               height: 23,
-  //             ),
-  //             Row(
-  //               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //               children: [
-  //                 myButton(
-  //                     onPressed: () async {
-  //                       setState(() {
-  //                         widget.ifsell = false;
-  //                       });
-  //                     },
-  //                     child: myText(
-  //                       text: 'Back',
-  //                       size: 20.0,
-  //                     )),
-  //                 myButton(
-  //                     onPressed: () async {
-  //                       if (nameController.text.isNotEmpty) {
-  //                         save();
-  //                       } else {}
-  //                     },
-  //                     child: myText(
-  //                       text: 'Sell',
-  //                       size: 20.0,
-  //                     )),
-  //               ],
-  //             )
-  //           ],
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
+  navigationToSplash() {
+    Navigator.pushNamedAndRemoveUntil(context, '/', (c) => false);
+  }
 }

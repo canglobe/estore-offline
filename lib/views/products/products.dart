@@ -28,35 +28,6 @@ class _ProductScreenState extends State<ProductScreen> {
     return productDetails;
   }
 
-  navigationTo(context) async {
-    var refresh = await Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const NewProduct()));
-    setState(() {
-      reFresh = refresh;
-    });
-  }
-
-  navigationToSplash() {
-    Navigator.pushNamed(context, '/');
-  }
-
-  pageRoute(BuildContext context, int index, Map<dynamic, dynamic> snap,
-      List<dynamic> products, bool ifsell) {
-    Navigator.of(context)
-        .push(MaterialPageRoute(
-            builder: (context) => ProductDetailPage(
-                  index: index,
-                  price: snap[products[index]]['price'],
-                  image: snap[products[index]]['image'],
-                  quantity: snap[products[index]]['quantity'],
-                  productname: products[index],
-                  ifsell: ifsell,
-                )))
-        .then((value) {
-      setState(() {});
-    });
-  }
-
 // UI Starts Here
   @override
   Widget build(BuildContext context) {
@@ -89,10 +60,15 @@ class _ProductScreenState extends State<ProductScreen> {
     return Align(
       alignment: Alignment.centerLeft,
       child: Padding(
-        padding: const EdgeInsets.only(left: 20),
-        child: Text(
-          'My Products',
-          style: Theme.of(context).textTheme.displayMedium,
+        padding: const EdgeInsets.only(left: 20, top: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'My Products',
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
+          ],
         ),
       ),
     );
@@ -120,13 +96,17 @@ class _ProductScreenState extends State<ProductScreen> {
                     padding: const EdgeInsets.all(2),
                     child: GestureDetector(
                       onTap: () {
-                        pageRoute(context, index, snap, products, false);
+                        screenRoute(context, index, snap, products, false);
                       },
                       child: SizedBox(
                         height: screenSize(context,
                             isHeight: true, percentage: 16.5),
                         child: Card(
-                          elevation: 0,
+                          elevation: 0.3,
+                          color: cardBgColor,
+                          shape: const RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(9))),
                           child: Row(
                               mainAxisAlignment: MainAxisAlignment.start,
                               children: [
@@ -136,8 +116,8 @@ class _ProductScreenState extends State<ProductScreen> {
                                       isHeight: false, percentage: 50),
                                   child: ClipRRect(
                                       borderRadius: const BorderRadius.only(
-                                        topLeft: Radius.circular(5),
-                                      ),
+                                          topLeft: Radius.circular(5),
+                                          bottomLeft: Radius.circular(5)),
                                       child: snap[products[index]]['image'] !=
                                               false
                                           ? Image.file(
@@ -152,16 +132,14 @@ class _ProductScreenState extends State<ProductScreen> {
                                                   padding:
                                                       const EdgeInsets.all(3),
                                                   child: Text(
-                                                    products[index]
-                                                        .toString()
-                                                        .toUpperCase(),
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                        fontSize: 21,
-                                                        fontWeight:
-                                                            FontWeight.bold),
-                                                  ),
+                                                      products[index]
+                                                          .toString()
+                                                          .toUpperCase(),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: Theme.of(context)
+                                                          .textTheme
+                                                          .headlineMedium),
                                                 ),
                                               ),
                                             )),
@@ -190,24 +168,30 @@ class _ProductScreenState extends State<ProductScreen> {
                                                 'Stock',
                                                 style: Theme.of(context)
                                                     .textTheme
-                                                    .labelSmall,
+                                                    .titleSmall,
                                               ),
                                               Text(
                                                 snap[products[index]]
                                                         ['quantity']
                                                     .toString(),
                                                 overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                    fontSize: snap[products[
-                                                                        index]]
-                                                                    ['quantity']
-                                                                .toString()
-                                                                .length >
-                                                            4
-                                                        ? 18
-                                                        : 27,
-                                                    fontWeight:
-                                                        FontWeight.bold),
+                                                style:
+                                                    // Theme.of(context)
+                                                    //     .textTheme
+                                                    //     .headlineLarge,
+                                                    TextStyle(
+                                                        color: textLightColor,
+                                                        fontSize: snap[products[
+                                                                            index]]
+                                                                        [
+                                                                        'quantity']
+                                                                    .toString()
+                                                                    .length >
+                                                                4
+                                                            ? 18
+                                                            : 24,
+                                                        fontWeight:
+                                                            FontWeight.bold),
                                               ),
                                             ],
                                           ),
@@ -218,11 +202,14 @@ class _ProductScreenState extends State<ProductScreen> {
                                             children: [
                                               IconButton(
                                                   onPressed: () {
-                                                    pageRoute(context, index,
+                                                    screenRoute(context, index,
                                                         snap, products, true);
                                                   },
-                                                  icon: const Icon(Icons
-                                                      .arrow_forward_ios_outlined)),
+                                                  icon: const Icon(
+                                                    Icons
+                                                        .arrow_forward_ios_outlined,
+                                                    color: textLightColor,
+                                                  )),
                                             ],
                                           )
                                         ],
@@ -244,10 +231,6 @@ class _ProductScreenState extends State<ProductScreen> {
           } else {
             return const Center();
           }
-          // } else {
-          //   return  Align(
-          //       alignment: Alignment.topLeft, child: LinearProgressIndicator());
-          // }
         },
       ),
     );
@@ -263,9 +246,42 @@ class _ProductScreenState extends State<ProductScreen> {
         child: FloatingActionButton.extended(
           onPressed: () => navigationTo(context),
           label: const Icon(Icons.add),
-          // child: const Icon(Icons.add),
         ),
       ),
     );
+  }
+
+  screenRoute(
+    BuildContext context,
+    int index,
+    Map<dynamic, dynamic> snap,
+    List<dynamic> products,
+    bool ifsell,
+  ) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(
+            builder: (context) => ProductDetailPage(
+                  index: index,
+                  price: snap[products[index]]['price'],
+                  image: snap[products[index]]['image'],
+                  quantity: snap[products[index]]['quantity'],
+                  productname: products[index],
+                  ifsell: ifsell,
+                )))
+        .then((value) {
+      setState(() {});
+    });
+  }
+
+  navigationTo(context) async {
+    var refresh = await Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const NewProduct()));
+    setState(() {
+      reFresh = refresh;
+    });
+  }
+
+  navigationToSplash() {
+    Navigator.pushNamed(context, '/');
   }
 }

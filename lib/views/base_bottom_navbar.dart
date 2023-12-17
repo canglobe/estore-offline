@@ -1,11 +1,15 @@
-import 'package:estore/views/sold/sold.dart';
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
+import 'package:estore/hive/hivebox.dart';
 
-import 'package:estore/main.dart';
+import 'package:estore/views/sold/sold.dart';
 import 'package:estore/constants/constants.dart';
 import 'package:estore/views/products/products.dart';
 import 'package:estore/views/customers/customers.dart';
 
+import 'ept1.dart';
+
+// The start code of Bottom Navigation Bar
 class BaseScreen extends StatefulWidget {
   const BaseScreen({super.key});
 
@@ -17,12 +21,9 @@ class _BaseScreenState extends State<BaseScreen> {
   int currentPageIndex = 1;
   bool? isDark;
 
-  // final fb = FB();
-
   List<Widget> pages = <Widget>[
     const CustomersScreen(),
     const ProductScreen(),
-    // const Calculator(),
     const SoldScreen(),
   ];
 
@@ -43,28 +44,17 @@ class _BaseScreenState extends State<BaseScreen> {
         ),
         actions: [
           // ---------------------------------------------------------------------------- Calculator
-          // IconButton(
-          //   onPressed: () async {
-          //     // await localdb.delete('overallHistory');
-          //     // var his = await localdb.get('overallHistory');
-          //     // print(his);
-
-          //     // String c = customTime();
-          //     // String da =
-          //     //     '${c.substring(0, 4)}-${c.substring(5, 7)}-${c.substring(8, 10)}';
-
-          //     // print(da);
-          //     await localdb.clear();
-          //     // Navigator.of(context)
-          //     //     .push(MaterialPageRoute(builder: (context) => Calculator()));
-          //   },
-          //   icon: const Icon(Icons.calculate_outlined),
-          //   tooltip: 'Cloud Upload',
-          // ),
+          IconButton(
+            onPressed: () async {
+              // await localdb.clear();
+            },
+            icon: const Icon(Icons.calculate_outlined),
+            tooltip: 'Cloud Upload',
+          ),
           // ---------------------------------------------------------------------------- Mode Change
           IconButton(
             onPressed: () async {
-              var mode = localdb.get('darkMode');
+              var mode = await hiveDb.getThemeMode();
 
               Ept1App.of(context)
                   .changeTheme(mode = mode == true ? false : true);
@@ -135,7 +125,7 @@ class _BaseScreenState extends State<BaseScreen> {
     );
   }
 
-  _showDialog(status) {
+  show(status) {
     showDialog(
         context: context,
         builder: (context) {
@@ -159,3 +149,5 @@ class _BaseScreenState extends State<BaseScreen> {
         });
   }
 }
+
+//  The End code of Bottom Navigation Bar

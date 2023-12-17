@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_typing_uninitialized_variables
+
 import 'package:estore/utils/size.dart';
 import 'package:flutter/material.dart';
 import 'package:math_expressions/math_expressions.dart';
